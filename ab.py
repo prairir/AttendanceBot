@@ -1,12 +1,16 @@
 import discord
 import asyncio
-from events import EventList 
+import sqlite3
+
+db = sqlite3.connect('data/base.db')
+cursor = db.cursor()
+cursor.execute(''' CREATE TABLE IF NOT EXISTS events(author TEXT, title TEXT, time TEXT, place TEXT)''')
+cursor.execute(''' CREATE TABLE IF NOT EXISTS going(author TEXT, title TEXT)''')
 
 client = discord.Client()
 
 f = open('token.txt', 'r')
 
-events = []
 
 @client.event
 async def on_ready():
@@ -19,13 +23,33 @@ async def on_ready():
 async def on_message(message):
     if message.content.startswith('!addevent'):
         fields = partParse(message.content[10:])
-        events.append(EventList(message.author, fields[0], fields[1], fields[2]))
+        title, time, place = fields
+        cursor.execute(''' INSERT INTO events(author, title, time, place) VALUES(?, ?, ?, ?)''',
+        (str(message.author), title, time, place))
+        db.commit()
 
     if message.content.startswith('!print'):
-        for i in events:
-            i.printDetails()
-            print("-----------------")
-    
+        cursor.execute(''' SELECT * FROM events''')
+        db.commit()
+        for row in cursor.fetchall():
+            print(row)
+
+    if message.content.startswith('!cleanevent'):
+        cursor.execute(''' DELETE FROM events ''')
+        db.commit()
+        cursor.execute(''' VACUUM''')
+        db.commit()
+        print('all clean')
+
+    if message.content.startswith('!cleangoing'):
+        cursor.execute(''' DELETE FROM going ''')
+        db.commit()
+        cursor.execute(''' VACUUM''')
+        db.commit()
+        print('all clean')
+
+
+
 def partParse(mess):
     parts = mess.split(' ')
     argcount = 0
@@ -56,4 +80,5 @@ def partParse(mess):
 
     atributes = [title, time, place]
     return atributes
+
 client.run(f.readline())
