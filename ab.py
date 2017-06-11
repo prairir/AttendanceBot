@@ -18,11 +18,9 @@ async def on_ready():
 @client.event
 async def on_message(message):
     if message.content.startswith('!addevent'):
-        '''delims = 'title: ', ' time: ', ' place: '
-        fields = regsplit(delims, message.content[10:])
-        events.append(EventList(message.author, fields[1], fields[2], fields[3]))
-        '''
-        partParse(message.content[10:])
+        fields = partParse(message.content[10:])
+        events.append(EventList(message.author, fields[0], fields[1], fields[2]))
+
     if message.content.startswith('!print'):
         for i in events:
             i.printDetails()
@@ -31,11 +29,10 @@ async def on_message(message):
 def partParse(mess):
     parts = mess.split(' ')
     argcount = 0
-    place = 'b'
-    time = 'x'
-    title = 'd'
+    place = ''
+    time = ''
+    title = ''
     for arg in parts:
-        print('arg is {}'.format(arg))
         if arg == 'title:':
             argcount = 1
             continue
@@ -57,14 +54,6 @@ def partParse(mess):
         elif argcount == 3:
             place += ' ' + arg
 
-    print(title)
-    print(time)
-    print(place)
-def regsplit(delimitors, string, maxsplit=0):
-    import re 
-    regexPattern = '|'.join(map(re.escape, delimitors))
-    return re.split(regexPattern, string, maxsplit)
-
-
-
+    atributes = [title, time, place]
+    return atributes
 client.run(f.readline())
